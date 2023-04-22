@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.tencent.wxcloudrun.model.CharValue;
@@ -44,7 +45,7 @@ public class BasicController {
     @Value("${wechat.appSecret}")
     private String appSecret;
 
-    @GetMapping("/login")
+  /*  @GetMapping("/login")
     public Object userLogin(@RequestParam String code) throws IOException {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
@@ -57,9 +58,9 @@ public class BasicController {
         Response response = client.newCall(request).execute();
         JSONObject jsonObject = JSON.parseObject(String.valueOf(response.body()));
         return jsonObject.get("open_id");
-    }
+    }*/
 
-    @GetMapping("/getToken")
+    @PostMapping("/getToken")
     @ResponseBody
     public String getToken() {
         return yingshiUtils.getToken();
@@ -67,17 +68,20 @@ public class BasicController {
 
     @PostMapping("/save")
     @ResponseBody
-    public void save(User user) {
+    public void save(@RequestBody User user, HttpServletRequest httpServletRequest) {
+        String header = httpServletRequest.getHeader("X-WX-OPENID");
+        user.setOpenId(header);
         userService.save(user);
         if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
             yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
         }
     }
 
-    @GetMapping("/getUser")
+    @PostMapping("/getUser")
     @ResponseBody
-    public User getUser(@RequestParam String openId) {
-        User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, openId));
+    public User getUser(HttpServletRequest httpServletRequest) {
+        String header = httpServletRequest.getHeader("X-WX-OPENID");
+        User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, header));
         if (StringUtils.isBlank(one.getPath())) {
             String address = yingshiUtils.getAddress(one.getDeviceSerial());
             one.setPath(address);
@@ -93,11 +97,12 @@ public class BasicController {
         userDataService.save(userData);
     }
 
-    @GetMapping("/getData")
+    @PostMapping("/getData")
     @ResponseBody
-    public String getData(@RequestParam String code) {
+    public String getData(HttpServletRequest httpServletRequest) {
+        String header = httpServletRequest.getHeader("X-WX-OPENID");
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
-                .eq(UserData::getOpenId, code)
+                .eq(UserData::getOpenId, header)
                 .between(UserData::getCreateTime, getDate(-7), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<Date> xData = new ArrayList<>();
@@ -119,11 +124,12 @@ public class BasicController {
         return JSON.toJSONString(new CharValue(xData, yData));
     }
 
-    @GetMapping("/listData")
+    @PostMapping("/listData")
     @ResponseBody
-    public String listData(@RequestParam String code) {
+    public String listData(HttpServletRequest httpServletRequest) {
+        String header = httpServletRequest.getHeader("X-WX-OPENID");
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
-                .eq(UserData::getOpenId, code)
+                .eq(UserData::getOpenId, header)
                 .between(UserData::getCreateTime, getDate(-7), new Date())
                 .orderByAsc(UserData::getCreateTime));
         return JSON.toJSONString(list);
