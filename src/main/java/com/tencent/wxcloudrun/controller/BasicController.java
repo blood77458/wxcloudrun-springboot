@@ -44,7 +44,7 @@ public class BasicController {
     @Value("${wechat.appSecret}")
     private String appSecret;
 
-    @RequestMapping("/login")
+    @GetMapping("/login")
     public Object userLogin(@RequestParam String code) throws IOException {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
@@ -59,13 +59,13 @@ public class BasicController {
         return jsonObject.get("open_id");
     }
 
-    @RequestMapping("/getToken")
+    @GetMapping("/getToken")
     @ResponseBody
     public String getToken() {
         return yingshiUtils.getToken();
     }
 
-    @RequestMapping("/save")
+    @PostMapping("/save")
     @ResponseBody
     public void save(User user) {
         userService.save(user);
@@ -74,7 +74,7 @@ public class BasicController {
         }
     }
 
-    @RequestMapping("/getUser")
+    @GetMapping("/getUser")
     @ResponseBody
     public User getUser(@RequestParam String openId) {
         User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, openId));
@@ -86,14 +86,14 @@ public class BasicController {
         return one;
     }
 
-    @RequestMapping("/saveData")
+    @PostMapping("/saveData")
     @ResponseBody
     public void saveData(@RequestBody UserData userData) {
         userData.setCreateTime(new Date());
         userDataService.save(userData);
     }
 
-    @RequestMapping("/getData")
+    @GetMapping("/getData")
     @ResponseBody
     public String getData(@RequestParam String code) {
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
@@ -119,7 +119,7 @@ public class BasicController {
         return JSON.toJSONString(new CharValue(xData, yData));
     }
 
-    @RequestMapping("/listData")
+    @GetMapping("/listData")
     @ResponseBody
     public String listData(@RequestParam String code) {
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
