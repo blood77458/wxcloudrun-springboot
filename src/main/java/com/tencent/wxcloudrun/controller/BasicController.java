@@ -12,12 +12,14 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.Resource;
 
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.tencent.wxcloudrun.model.CharValue;
 import com.tencent.wxcloudrun.model.User;
 import com.tencent.wxcloudrun.model.UserData;
 import com.tencent.wxcloudrun.service.UserDataService;
 import com.tencent.wxcloudrun.service.UserService;
 
+import com.tencent.wxcloudrun.utils.YingshiUtils;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,6 +31,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class BasicController {
 
+    @Resource
+    private YingshiUtils yingshiUtils;
     @Resource
     UserService userService;
     @Resource
@@ -55,17 +59,31 @@ public class BasicController {
         return jsonObject.get("open_id");
     }
 
+    @RequestMapping("/getToken")
+    @ResponseBody
+    public String getToken() {
+        return yingshiUtils.getToken();
+    }
 
     @RequestMapping("/save")
     @ResponseBody
     public void save(User user) {
         userService.save(user);
+        if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
+            yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
+        }
     }
 
     @RequestMapping("/getUser")
     @ResponseBody
     public User getUser(@RequestParam String openId) {
-        return userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, openId));
+        User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, openId));
+        if (StringUtils.isBlank(one.getPath())) {
+            String address = yingshiUtils.getAddress(one.getDeviceSerial());
+            one.setPath(address);
+            userService.updateById(one);
+        }
+        return one;
     }
 
     @RequestMapping("/saveData")
@@ -99,6 +117,16 @@ public class BasicController {
             yData.add(value);
         }
         return JSON.toJSONString(new CharValue(xData, yData));
+    }
+
+    @RequestMapping("/listData")
+    @ResponseBody
+    public String listData(@RequestParam String code) {
+        List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
+                .eq(UserData::getOpenId, code)
+                .between(UserData::getCreateTime, getDate(-7), new Date())
+                .orderByAsc(UserData::getCreateTime));
+        return JSON.toJSONString(list);
     }
 
     private static Double getD(String s) {
