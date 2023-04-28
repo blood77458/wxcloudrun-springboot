@@ -68,7 +68,7 @@ public class YingshiUtils {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
-        RequestBody body = RequestBody.create(mediaType, "accessToken=" + getToken() + "&deviceSerial=" + deviceSerial + "protocol=3&quality=1");
+        RequestBody body = RequestBody.create(mediaType, "accessToken=" + getToken() + "&deviceSerial=" + deviceSerial + "protocol=3");
         Request request = new Request.Builder()
                 .url("https://open.ys7.com/api/lapp/v2/live/address/get")
                 .method("POST", body)

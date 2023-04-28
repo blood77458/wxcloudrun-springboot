@@ -73,7 +73,11 @@ public class BasicController {
         user.setOpenId(header);
         userService.save(user);
         if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
-            yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
+            try{
+                yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
+            }catch(Exception e){
+             
+            }
         }
     }
 
