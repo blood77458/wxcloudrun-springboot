@@ -2,10 +2,8 @@
 package com.tencent.wxcloudrun.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
-import java.io.IOException;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,12 +19,9 @@ import com.tencent.wxcloudrun.service.UserDataService;
 import com.tencent.wxcloudrun.service.UserService;
 
 import com.tencent.wxcloudrun.utils.YingshiUtils;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 
 @RestController
@@ -38,6 +33,9 @@ public class BasicController {
     UserService userService;
     @Resource
     UserDataService userDataService;
+
+    @Resource
+    RestTemplate restTemplate;
 
 
     @PostMapping("/getToken")
@@ -51,24 +49,29 @@ public class BasicController {
     public void save(@RequestBody User user, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
         User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, header));
-        if(one == null){
+        if (one == null) {
             one = user;
-        }else{
+        } else {
             one.setDeviceSerial(user.getDeviceSerial());
             one.setValidateCode(user.getValidateCode());
         }
         one.setOpenId(header);
         userService.save(one);
         if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
-            try{
+            try {
                 yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
                 String address = yingshiUtils.getAddress(one.getDeviceSerial());
                 one.setPath(address);
                 userService.updateById(one);
-            }catch(Exception e){
-             
+                startNewYolo(one.getOpenId(), one.getPath());
+            } catch (Exception e) {
+
             }
         }
+    }
+
+    private void startNewYolo(String openId, String path) {
+        ResponseEntity<String> forEntity = restTemplate.getForEntity("http://43.142.14.123:8080/start?openId=" + openId + "&path=" + path, String.class);
     }
 
     @PostMapping("/getUser")
