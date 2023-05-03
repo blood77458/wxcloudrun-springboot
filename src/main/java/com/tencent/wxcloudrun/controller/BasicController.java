@@ -39,26 +39,6 @@ public class BasicController {
     @Resource
     UserDataService userDataService;
 
-    @Value("${wechat.appId}")
-    private String appId;
-
-    @Value("${wechat.appSecret}")
-    private String appSecret;
-
-  /*  @GetMapping("/login")
-    public Object userLogin(@RequestParam String code) throws IOException {
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .build();
-        MediaType mediaType = MediaType.parse("text/plain");
-        okhttp3.RequestBody body = okhttp3.RequestBody.create(mediaType, "");
-        Request request = new Request.Builder()
-                .url("https://api.weixin.qq.com/sns/jscode2session?appid=" + appId + "&secret=" + appSecret + "&js_code=" + code + "&grant_type=authorization_code")
-                .method("GET", body)
-                .build();
-        Response response = client.newCall(request).execute();
-        JSONObject jsonObject = JSON.parseObject(String.valueOf(response.body()));
-        return jsonObject.get("open_id");
-    }*/
 
     @PostMapping("/getToken")
     @ResponseBody
@@ -70,11 +50,21 @@ public class BasicController {
     @ResponseBody
     public void save(@RequestBody User user, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
-        user.setOpenId(header);
-        userService.save(user);
+        User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, header));
+        if(one == null){
+            one = user;
+        }else{
+            one.setDeviceSerial(user.getDeviceSerial());
+            one.setValidateCode(user.getValidateCode());
+        }
+        one.setOpenId(header);
+        userService.save(one);
         if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
             try{
                 yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
+                String address = yingshiUtils.getAddress(one.getDeviceSerial());
+                one.setPath(address);
+                userService.updateById(one);
             }catch(Exception e){
              
             }
