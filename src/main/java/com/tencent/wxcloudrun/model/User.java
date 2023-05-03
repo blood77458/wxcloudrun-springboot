@@ -21,6 +21,8 @@ public class User {
 
     private String path;
 
+    private String flvPath;
+
     private Date createTime;
 
 }

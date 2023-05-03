@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
+
 @Component
 public class YingshiUtils {
 
@@ -47,7 +48,7 @@ public class YingshiUtils {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
-        RequestBody body = RequestBody.create(mediaType, "accessToken=" + getToken() + "&deviceSerial=" + deviceSerial + "validateCode=" + validateCode);
+        RequestBody body = RequestBody.create(mediaType, "accessToken=" + getToken() + "&deviceSerial=" + deviceSerial + "&validateCode=" + validateCode);
         Request request = new Request.Builder()
                 .url("https://open.ys7.com/api/lapp/device/add")
                 .method("POST", body)
@@ -64,11 +65,11 @@ public class YingshiUtils {
         }
     }
 
-    public String getAddress(String deviceSerial) {
+    public String getAddress(String deviceSerial, Integer type) {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
-        RequestBody body = RequestBody.create(mediaType, "accessToken=" + getToken() + "&deviceSerial=" + deviceSerial + "protocol=3");
+        RequestBody body = RequestBody.create(mediaType, "accessToken=" + getToken() + "&deviceSerial=" + deviceSerial + "&protocol=" + type+"&expireTime=61000000");
         Request request = new Request.Builder()
                 .url("https://open.ys7.com/api/lapp/v2/live/address/get")
                 .method("POST", body)

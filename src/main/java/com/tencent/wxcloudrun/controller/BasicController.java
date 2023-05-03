@@ -4,6 +4,7 @@ package com.tencent.wxcloudrun.controller;
 import com.alibaba.fastjson.JSON;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-
+//{"xmin":{},"ymin":{},"xmax":{},"ymax":{},"confidence":{},"class":{},"name":{}}
 @RestController
 public class BasicController {
 
@@ -51,27 +52,37 @@ public class BasicController {
         User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, header));
         if (one == null) {
             one = user;
+            one.setOpenId(header);
+            userService.save(one);
         } else {
             one.setDeviceSerial(user.getDeviceSerial());
             one.setValidateCode(user.getValidateCode());
+            userService.updateById(one);
         }
-        one.setOpenId(header);
-        userService.save(one);
         if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
             try {
                 yingshiUtils.addDevice(user.getDeviceSerial(), user.getValidateCode());
-                String address = yingshiUtils.getAddress(one.getDeviceSerial());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
+            try {
+                String address = yingshiUtils.getAddress(one.getDeviceSerial(), 3);
+                String flvAddress = yingshiUtils.getAddress(one.getDeviceSerial(), 4);
                 one.setPath(address);
+                one.setFlvPath(flvAddress);
                 userService.updateById(one);
                 startNewYolo(one.getOpenId(), one.getPath());
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
     }
 
     private void startNewYolo(String openId, String path) {
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://43.142.14.123:8080/start?openId=" + openId + "&path=" + path, String.class);
+        System.out.println(forEntity.getBody());
     }
 
     @PostMapping("/getUser")
@@ -80,8 +91,10 @@ public class BasicController {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
         User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, header));
         if (StringUtils.isBlank(one.getPath())) {
-            String address = yingshiUtils.getAddress(one.getDeviceSerial());
+            String address = yingshiUtils.getAddress(one.getDeviceSerial(), 3);
+            String flvAddress = yingshiUtils.getAddress(one.getDeviceSerial(), 4);
             one.setPath(address);
+            one.setFlvPath(flvAddress);
             userService.updateById(one);
         }
         return one;
