@@ -5,14 +5,13 @@ import com.alibaba.fastjson.JSON;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.net.URLEncoder;
+import java.util.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.tencent.wxcloudrun.dto.YoloDto;
 import com.tencent.wxcloudrun.model.CharValue;
 import com.tencent.wxcloudrun.model.User;
 import com.tencent.wxcloudrun.model.UserData;
@@ -82,6 +81,7 @@ public class BasicController {
     }
 
     private void startNewYolo(String openId, String path) {
+        path = URLEncoder.encode(path);
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://43.142.14.123:8080/start?openId=" + openId + "&path=" + path, String.class);
         System.out.println(forEntity.getBody());
     }
@@ -123,14 +123,16 @@ public class BasicController {
             UserData userData1 = list.get(i + 1);
             String yoloData = userData.getYoloData();
             String yoloData1 = userData1.getYoloData();
-            String replace = yoloData.replace("[", "").replace("]", "");
-            String replace1 = yoloData1.replace("[", "").replace("]", "");
-            String[] split = replace.split(",");
-            String[] split1 = replace1.split(",");
-            Double value = getPosition(getD(split[0]), getD(split[1]), getD(split1[0]), getD(split1[1]));
-            Date createTime = userData1.getCreateTime();
-            xData.add(createTime);
-            yData.add(value);
+          try {
+              YoloDto yoloDto = JSON.parseObject(yoloData,YoloDto.class);
+              YoloDto yoloDto1 = JSON.parseObject(yoloData1,YoloDto.class);
+              Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
+              Date createTime = userData1.getCreateTime();
+              xData.add(createTime);
+              yData.add(value);
+          }catch (Exception e){
+              e.printStackTrace();
+          }
         }
         return JSON.toJSONString(new CharValue(xData, yData));
     }
@@ -146,8 +148,11 @@ public class BasicController {
         return JSON.toJSONString(list);
     }
 
-    private static Double getD(String s) {
-        return Double.parseDouble(s.trim());
+    private static Double getD(Map<String,Double> map) {
+        if(map == null){
+            return 0D;
+        }
+        return map.get("0");
     }
 
     private static Double getPosition(Double x1, Double y1, Double x2, Double y2) {
