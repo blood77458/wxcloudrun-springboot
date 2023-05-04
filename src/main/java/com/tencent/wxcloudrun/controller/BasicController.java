@@ -70,7 +70,7 @@ public class BasicController {
         if (StringUtils.isNotBlank(user.getDeviceSerial()) && StringUtils.isNotBlank(user.getValidateCode())) {
             try {
                 String address = yingshiUtils.getAddress(one.getDeviceSerial(), 3);
-                String flvAddress = yingshiUtils.getAddress(one.getDeviceSerial(), 4);
+                String flvAddress = yingshiUtils.getAddress(one.getDeviceSerial(), 2);
                 one.setPath(address);
                 one.setFlvPath(flvAddress);
                 userService.updateById(one);
@@ -93,7 +93,7 @@ public class BasicController {
         User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenId, header));
         if (StringUtils.isBlank(one.getPath())) {
             String address = yingshiUtils.getAddress(one.getDeviceSerial(), 3);
-            String flvAddress = yingshiUtils.getAddress(one.getDeviceSerial(), 4);
+            String flvAddress = yingshiUtils.getAddress(one.getDeviceSerial(), 2);
             one.setPath(address);
             one.setFlvPath(flvAddress);
             userService.updateById(one);
