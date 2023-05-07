@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CharValue {
-  private List<Date> xData;
+  private List<String> xData;
 
   private List<Double> yData;
 }

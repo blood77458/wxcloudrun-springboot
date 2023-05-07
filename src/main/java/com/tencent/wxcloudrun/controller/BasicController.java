@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -116,23 +117,27 @@ public class BasicController {
                 .eq(UserData::getOpenId, header)
                 .between(UserData::getCreateTime, getDate(-7), new Date())
                 .orderByAsc(UserData::getCreateTime));
-        List<Date> xData = new ArrayList<>();
+        List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
         for (int i = 0; i < list.size() - 1; i++) {
             UserData userData = list.get(i);
             UserData userData1 = list.get(i + 1);
             String yoloData = userData.getYoloData();
             String yoloData1 = userData1.getYoloData();
-          try {
-              YoloDto yoloDto = JSON.parseObject(yoloData,YoloDto.class);
-              YoloDto yoloDto1 = JSON.parseObject(yoloData1,YoloDto.class);
-              Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
-              Date createTime = userData1.getCreateTime();
-              xData.add(createTime);
-              yData.add(value);
-          }catch (Exception e){
-              e.printStackTrace();
-          }
+            try {
+                YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
+                YoloDto yoloDto1 = JSON.parseObject(yoloData1, YoloDto.class);
+                Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
+                if (value == null) {
+                    continue;
+                }
+                Date createTime = userData1.getCreateTime();
+                xData.add(dateFormat.format(createTime));
+                yData.add(value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return JSON.toJSONString(new CharValue(xData, yData));
     }
@@ -148,14 +153,17 @@ public class BasicController {
         return JSON.toJSONString(list);
     }
 
-    private static Double getD(Map<String,Double> map) {
-        if(map == null){
+    private static Double getD(Map<String, Double> map) {
+        if (map == null) {
             return 0D;
         }
         return map.get("0");
     }
 
     private static Double getPosition(Double x1, Double y1, Double x2, Double y2) {
+        if (x1 == null || y1 == null || x2 == null || y2 == null) {
+            return null;
+        }
         return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
     }
 
