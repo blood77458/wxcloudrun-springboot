@@ -134,6 +134,7 @@ public class BasicController {
                 }
                 Date createTime = userData1.getCreateTime();
                 createTime.setTime(createTime.getTime() +8*60*60*1000);
+
                 xData.add(dateFormat.format(createTime));
                 yData.add(value);
             } catch (Exception e) {
