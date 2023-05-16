@@ -115,7 +115,7 @@ public class BasicController {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
-                .between(UserData::getCreateTime, getHour(-1), new Date())
+                .between(UserData::getCreateTime, getHour(-10), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
@@ -133,9 +133,6 @@ public class BasicController {
                     continue;
                 }
                 Date createTime = userData1.getCreateTime();
-                long time = createTime.getTime();
-                time += 8 * 60 * 60 * 1000;
-                createTime.setTime(time);
                 xData.add(dateFormat.format(createTime));
                 yData.add(value);
             } catch (Exception e) {
