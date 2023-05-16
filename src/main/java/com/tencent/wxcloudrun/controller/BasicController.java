@@ -133,6 +133,7 @@ public class BasicController {
                     continue;
                 }
                 Date createTime = userData1.getCreateTime();
+
                 xData.add(dateFormat.format(createTime));
                 yData.add(value);
             } catch (Exception e) {
