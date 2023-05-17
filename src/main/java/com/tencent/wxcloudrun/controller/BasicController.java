@@ -108,7 +108,33 @@ public class BasicController {
         userData.setCreateTime(new Date());
         userDataService.save(userData);
     }
-
+    @PostMapping("/getDataHasFish")
+    @ResponseBody
+    public String getDataHasFish(HttpServletRequest httpServletRequest) {
+        String header = httpServletRequest.getHeader("X-WX-OPENID");
+        List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
+                .eq(UserData::getOpenId, header)
+                .between(UserData::getCreateTime, getMinute(-30), new Date())
+                .orderByAsc(UserData::getCreateTime));
+        List<String> xData = new ArrayList<>();
+        List<Double> yData = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
+        for (int i = 0; i < list.size() - 1; i++) {
+            UserData userData = list.get(i);
+            String yoloData = userData.getYoloData();
+            try {
+                YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
+                Double value = getHasFish(getD(yoloDto.getXmin()), getD(yoloDto.getXmax()), getD(yoloDto1.getYmin()), getD(yoloDto1.getYmax()));
+                Date createTime = userData1.getCreateTime();
+                createTime.setTime(createTime.getTime() +8*60*60*1000);
+                xData.add(dateFormat.format(createTime));
+                yData.add(value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return JSON.toJSONString(new CharValue(xData, yData));
+    }
     @PostMapping("/getData")
     @ResponseBody
     public String getData(HttpServletRequest httpServletRequest) {
@@ -167,6 +193,14 @@ public class BasicController {
             return null;
         }
         return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+    }
+
+    private static Double getHasFish(Double xmin, Double xmax, Double ymin, Double ymax) {
+        if (xmin == null && xmax == null && ymin == null && ymax == null)
+        {
+            return 0.0;
+        }
+        return 1.0;
     }
 
     private static Date getDate(int amount) {
