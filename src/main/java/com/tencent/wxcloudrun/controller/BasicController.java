@@ -108,6 +108,33 @@ public class BasicController {
         userData.setCreateTime(new Date());
         userDataService.save(userData);
     }
+    @PostMapping("/getDataHight")
+    @ResponseBody
+    public String getDataHight(HttpServletRequest httpServletRequest) {
+        String header = httpServletRequest.getHeader("X-WX-OPENID");
+        List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
+                .eq(UserData::getOpenId, header)
+                .between(UserData::getCreateTime, getMinute(-10), new Date())
+                .orderByAsc(UserData::getCreateTime));
+        List<String> xData = new ArrayList<>();
+        List<Double> yData = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
+        for (int i = 0; i < list.size() - 1; i++) {
+            UserData userData = list.get(i);
+            String yoloData = userData.getYoloData();
+            try {
+                YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
+                Double value = getD(yoloDto.getYmax());
+                Date createTime = userData.getCreateTime();
+                createTime.setTime(createTime.getTime() +8*60*60*1000);
+                xData.add(dateFormat.format(createTime));
+                yData.add(value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return JSON.toJSONString(new CharValue(xData, yData));
+    }
     @PostMapping("/getDataHasFish")
     @ResponseBody
     public String getDataHasFish(HttpServletRequest httpServletRequest) {
