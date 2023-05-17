@@ -115,7 +115,7 @@ public class BasicController {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
-                .between(UserData::getCreateTime, getHour(-1), new Date())
+                .between(UserData::getCreateTime, getMinute(-30), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
@@ -188,4 +188,14 @@ public class BasicController {
         //这个时间就是日期往后推一天的结果
         return calendar.getTime();
     }
+    private static Date getMinute(int amount) {
+        Date date = new Date();//取时间
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        //把日期往后增加一天.整数往后推,负数往前移动(1:表示明天、-1：表示昨天，0：表示今天)
+        calendar.add(Calendar.MINUTE, amount);
+        //这个时间就是日期往后推一天的结果
+        return calendar.getTime();
+    }
+
 }
