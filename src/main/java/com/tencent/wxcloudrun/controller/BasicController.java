@@ -124,8 +124,8 @@ public class BasicController {
             String yoloData = userData.getYoloData();
             try {
                 YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
-                Double value = getHasFish(getD(yoloDto.getXmin()), getD(yoloDto.getXmax()), getD(yoloDto1.getYmin()), getD(yoloDto1.getYmax()));
-                Date createTime = userData1.getCreateTime();
+                Double value = getHasFish(getD(yoloDto.getXmin()), getD(yoloDto.getXmax()), getD(yoloDto.getYmin()), getD(yoloDto.getYmax()));
+                Date createTime = userData.getCreateTime();
                 createTime.setTime(createTime.getTime() +8*60*60*1000);
                 xData.add(dateFormat.format(createTime));
                 yData.add(value);
