@@ -141,7 +141,7 @@ public class BasicController {
     @ResponseBody
     public String getDataHight(@RequestBody String data, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
-        IRequestBody req_data = SON.parseObject(data, IRequestBody.class);
+        IRequestBody req_data = JSON.parseObject(data, IRequestBody.class);
         int time = req_data.getTime();
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
