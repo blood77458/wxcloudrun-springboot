@@ -175,8 +175,8 @@ public class BasicController {
                 }
                 merge_index++;
             }
-            Date createTime = null;
-            createTime.setTime(avg_time +8*60*60*1000);
+            Date createTime = new Date();
+            createTime.setTime(avg_time + 8*60*60*1000);
             xData.add(dateFormat.format(createTime));
             yData.add(avg);
 
