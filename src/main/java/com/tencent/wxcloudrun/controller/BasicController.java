@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.tencent.wxcloudrun.dto.IRequestBody;
 import com.tencent.wxcloudrun.dto.YoloDto;
 import com.tencent.wxcloudrun.model.CharValue;
 import com.tencent.wxcloudrun.model.User;
@@ -138,12 +139,13 @@ public class BasicController {
 
     @PostMapping("/getDataHight")
     @ResponseBody
-    public String getDataHight(HttpServletRequest httpServletRequest) {
+    public String getDataHight(@RequestBody String data, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
-        String time = httpServletRequest.getParameter("time");
+        IRequestBody req_data = SON.parseObject(data, IRequestBody.class);
+        int time = req_data.getTime();
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
-                .between(UserData::getCreateTime, getMinute(-Integer.parseInt(time)), new Date())
+                .between(UserData::getCreateTime, getMinute(-time), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
