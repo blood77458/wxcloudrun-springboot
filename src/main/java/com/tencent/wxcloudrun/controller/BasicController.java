@@ -281,35 +281,49 @@ public class BasicController {
     }
     @PostMapping("/getDataSpeed")
     @ResponseBody
-    public String getDataSpeed(HttpServletRequest httpServletRequest) {
+    public String getDataSpeed(@RequestBody String data, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
+        IRequestBody req_data = JSON.parseObject(data, IRequestBody.class);
+        int time = req_data.getTime();
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
-                .between(UserData::getCreateTime, getMinute(-30), new Date())
+                .between(UserData::getCreateTime, getMinute(-time), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
-        for (int i = 0; i < list.size() - 1; i++) {
-            UserData userData = list.get(i);
-            UserData userData1 = list.get(i + 1);
-            String yoloData = userData.getYoloData();
-            String yoloData1 = userData1.getYoloData();
-            try {
-                YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
-                YoloDto yoloDto1 = JSON.parseObject(yoloData1, YoloDto.class);
-                Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
-                if (value == null) {
-                    continue;
+        int merge_size = time / 10;
+        if (merge_size == 0) merge_size = 1;
+        int i = 0;
+        Double avg = 0.0;
+        long avg_time = 0;
+        while (i < list.size() - 1) {
+            int merge_index = 0;
+            avg = 0.0;
+            avg_time = 0;
+            while (merge_index < merge_size && i + merge_index < list.size() - 1) {
+                UserData userData = list.get(i + merge_index);
+                UserData userData1 = list.get(i + merge_index + 1);
+                String yoloData = userData.getYoloData();
+                String yoloData1 = userData1.getYoloData();
+                try {
+                    YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
+                    YoloDto yoloDto1 = JSON.parseObject(yoloData1, YoloDto.class);
+                    Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
+                    avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
+                    long time_value = userData.getCreateTime().getTime();
+                    avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                Date createTime = userData1.getCreateTime();
-                createTime.setTime(createTime.getTime() +8*60*60*1000);
-
-                xData.add(dateFormat.format(createTime));
-                yData.add(value);
-            } catch (Exception e) {
-                e.printStackTrace();
+                merge_index++;
             }
+            Date createTime = new Date();
+            createTime.setTime(avg_time + 8 * 60 * 60 * 1000);
+            xData.add(dateFormat.format(createTime));
+            yData.add(avg/7);
+
+            i += merge_size;
         }
         return JSON.toJSONString(new CharValue(xData, yData));
     }
