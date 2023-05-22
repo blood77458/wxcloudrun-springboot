@@ -186,28 +186,48 @@ public class BasicController {
     }
     @PostMapping("/getDataHasFish")
     @ResponseBody
-    public String getDataHasFish(HttpServletRequest httpServletRequest) {
+    public String getDataHasFish(@RequestBody String data, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
+        IRequestBody req_data = JSON.parseObject(data, IRequestBody.class);
+        int time = req_data.getTime();
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
-                .between(UserData::getCreateTime, getMinute(-10), new Date())
+                .between(UserData::getCreateTime, getMinute(-time), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
-        for (int i = 0; i < list.size() - 1; i++) {
-            UserData userData = list.get(i);
-            String yoloData = userData.getYoloData();
-            try {
-                YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
-                Double value = getHasFish(getD(yoloDto.getXmin()), getD(yoloDto.getXmax()), getD(yoloDto.getYmin()), getD(yoloDto.getYmax()));
-                Date createTime = userData.getCreateTime();
-                createTime.setTime(createTime.getTime() +8*60*60*1000);
-                xData.add(dateFormat.format(createTime));
-                yData.add(value);
-            } catch (Exception e) {
-                e.printStackTrace();
+        int merge_size = time / 10;
+        if (merge_size == 0) merge_size = 1;
+        int i = 0;
+        Double avg = 0.0;
+        long avg_time = 0;
+        while (i < list.size())
+        {
+            int merge_index = 0;
+            avg = 0.0;
+            avg_time = 0;
+            while (merge_index < merge_size && i+merge_index < list.size())
+            {
+                UserData userData = list.get(i+merge_index);
+                String yoloData = userData.getYoloData();
+                try {
+                    YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
+                    Double value = getHasFish(getD(yoloDto.getXmin()), getD(yoloDto.getXmax()), getD(yoloDto.getYmin()), getD(yoloDto.getYmax()));
+                    avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
+                    long time_value = userData.getCreateTime().getTime();
+                    avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                merge_index++;
             }
+            Date createTime = new Date();
+            createTime.setTime(avg_time + 8*60*60*1000);
+            xData.add(dateFormat.format(createTime));
+            yData.add(avg);
+
+            i += merge_size;
         }
         return JSON.toJSONString(new CharValue(xData, yData));
     }
