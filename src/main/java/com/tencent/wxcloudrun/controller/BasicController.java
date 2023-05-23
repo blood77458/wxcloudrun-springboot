@@ -178,6 +178,7 @@ public class BasicController {
             Date createTime = new Date();
             createTime.setTime(avg_time + 8*60*60*1000);
             xData.add(dateFormat.format(createTime));
+            System.out.println(dateFormat.format(createTime));
             yData.add(avg);
 
             i += merge_size;
