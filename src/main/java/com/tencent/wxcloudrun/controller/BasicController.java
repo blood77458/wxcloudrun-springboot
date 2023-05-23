@@ -167,7 +167,7 @@ public class BasicController {
                 try {
                     YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
                     Double value = getD(yoloDto.getYmax());
-                    if (value == 0D)
+                    if (value == null || value == 0D)
                     {
                         ++i;
                         continue;
