@@ -167,6 +167,11 @@ public class BasicController {
                 try {
                     YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
                     Double value = getD(yoloDto.getYmax());
+                    if (value == 0D)
+                    {
+                        ++i;
+                        continue;
+                    }
                     avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     long time_value = userData.getCreateTime().getTime();
                     avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
@@ -178,7 +183,6 @@ public class BasicController {
             Date createTime = new Date();
             createTime.setTime(avg_time + 8*60*60*1000);
             xData.add(dateFormat.format(createTime));
-            System.out.println(dateFormat.format(createTime));
             yData.add(avg);
 
             i += merge_size;
