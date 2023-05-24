@@ -120,20 +120,44 @@ public class BasicController {
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
-        for (int i = 0; i < list.size() - 1; i++) {
-            UserData userData = list.get(i);
-            String yoloData = userData.getYoloData();
-            try {
-                YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
-                Double value = getD(yoloDto.getYmax());
-                Date createTime = userData.getCreateTime();
-                createTime.setTime(createTime.getTime() +8*60*60*1000);
-                xData.add(dateFormat.format(createTime));
-                yData.add(value);
-            } catch (Exception e) {
-                e.printStackTrace();
+        int merge_size = time / 10;
+        if (merge_size == 0) merge_size = 1;
+        int i = 0;
+        Double avg = 0.0;
+        long avg_time = 0;
+        while (i < list.size())
+        {
+            int merge_index = 0;
+            avg = 0.0;
+            avg_time = 0;
+            while (merge_index < merge_size && i+merge_index < list.size())
+            {
+                UserData userData = list.get(i+merge_index);
+                String yoloData = userData.getYoloData();
+                try {
+                    YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
+                    Map<String, Double> map = yoloDto.getYmax();
+                    Double value = 0.0;
+                    if (map != null)
+                    {
+                        value = Double.valueOf(map.size());
+                    }
+                    avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
+                    long time_value = userData.getCreateTime().getTime();
+                    avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                merge_index++;
             }
+            Date createTime = new Date();
+            createTime.setTime(avg_time + 8*60*60*1000);
+            xData.add(dateFormat.format(createTime));
+            yData.add(avg);
+
+            i += merge_size;
         }
+
         return JSON.toJSONString(new CharValue(xData, yData));
     }
 
@@ -167,10 +191,9 @@ public class BasicController {
                 try {
                     YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
                     Double value = getD(yoloDto.getYmax());
-                    if (value == null || value == 0D)
+                    if (value == null)
                     {
-                        ++i;
-                        continue;
+                        value = 0.0;
                     }
                     avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     long time_value = userData.getCreateTime().getTime();
@@ -256,8 +279,7 @@ public class BasicController {
                     Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
                     if (value == null)
                     {
-                        ++i;
-                        continue;
+                        value = 0.0;
                     }
                     avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     long time_value = userData.getCreateTime().getTime();
@@ -309,8 +331,7 @@ public class BasicController {
                     Double value = getPosition(getD(yoloDto.getXmin()), getD(yoloDto.getYmin()), getD(yoloDto1.getXmin()), getD(yoloDto1.getYmin()));
                     if (value == null)
                     {
-                        ++i;
-                        continue;
+                        value = 0.0;
                     }
                     avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     long time_value = userData.getCreateTime().getTime();
