@@ -352,6 +352,7 @@ public class BasicController {
         }
         return JSON.toJSONString(new CharValue(xData, yData));
     }
+
     @PostMapping("/listData")
     @ResponseBody
     public String listData(HttpServletRequest httpServletRequest) {
