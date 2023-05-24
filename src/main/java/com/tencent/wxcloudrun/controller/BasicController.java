@@ -111,11 +111,13 @@ public class BasicController {
     }
     @PostMapping("/getDataNum")
     @ResponseBody
-    public String getDataNum(HttpServletRequest httpServletRequest) {
+    public String getDataNum(@RequestBody String data, HttpServletRequest httpServletRequest) {
         String header = httpServletRequest.getHeader("X-WX-OPENID");
+        IRequestBody req_data = JSON.parseObject(data, IRequestBody.class);
+        int time = req_data.getTime();
         List<UserData> list = userDataService.list(new LambdaQueryWrapper<UserData>()
                 .eq(UserData::getOpenId, header)
-                .between(UserData::getCreateTime, getMinute(-10), new Date())
+                .between(UserData::getCreateTime, getMinute(-time), new Date())
                 .orderByAsc(UserData::getCreateTime));
         List<String> xData = new ArrayList<>();
         List<Double> yData = new ArrayList<>();
