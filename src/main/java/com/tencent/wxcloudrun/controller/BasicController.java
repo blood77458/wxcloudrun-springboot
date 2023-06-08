@@ -200,12 +200,17 @@ public class BasicController {
                         avg = null;
                         ++null_num;
                     }
+                    else if (yoloDto.getYmax() == null && merge_size > 1)
+                    {
+                        ++null_num;
+                        continue;
+                    }
                     else
                     {
                         value = getD(yoloDto.getYmax());
-
+                        avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     }
-                    avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
+
                     long time_value = userData.getCreateTime().getTime();
                     avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
                 } catch (Exception e) {
