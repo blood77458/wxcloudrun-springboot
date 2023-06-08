@@ -186,7 +186,8 @@ public class BasicController {
             int merge_index = 0;
             avg = 0.0;
             avg_time = 0;
-            while (merge_index < merge_size && i+merge_index < list.size())
+            int null_num = 0;   //未识别到龙鱼时，值是null，要把他略过
+            while (merge_index < merge_size-null_num && i+merge_index < list.size())
             {
                 UserData userData = list.get(i+merge_index);
                 String yoloData = userData.getYoloData();
@@ -196,19 +197,15 @@ public class BasicController {
                     if (yoloDto.getYmax() == null && merge_size == 1)
                     {
                         value = null;
+                        avg = null;
+                        ++null_num;
                     }
                     else
                     {
                         value = getD(yoloDto.getYmax());
+
                     }
-                    if (value == null)
-                    {
-                        avg = null;
-                    }
-                    else
-                    {
-                        avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
-                    }
+                    avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     long time_value = userData.getCreateTime().getTime();
                     avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
                 } catch (Exception e) {
