@@ -191,13 +191,24 @@ public class BasicController {
                 UserData userData = list.get(i+merge_index);
                 String yoloData = userData.getYoloData();
                 try {
+                    Double value;
                     YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
-                    Double value = getD(yoloDto.getYmax());
+                    if (yoloDto.getYmax() == null && merge_size == 1)
+                    {
+                        value = null;
+                    }
+                    else
+                    {
+                        value = getD(yoloDto.getYmax());
+                    }
                     if (value == null)
                     {
-                        value = 0.0;
+                        avg = null;
                     }
-                    avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
+                    else
+                    {
+                        avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
+                    }
                     long time_value = userData.getCreateTime().getTime();
                     avg_time = avg_time / (merge_index + 1) * merge_index + time_value / (merge_index + 1);
                 } catch (Exception e) {
