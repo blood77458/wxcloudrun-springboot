@@ -181,12 +181,13 @@ public class BasicController {
         int i = 0;
         Double avg = 0.0;
         long avg_time = 0;
+        int null_num = 0;
         while (i < list.size())
         {
             int merge_index = 0;
             avg = 0.0;
             avg_time = 0;
-            int null_num = 0;   //未识别到龙鱼时，值是null，要把他略过
+            null_num = 0;   //未识别到龙鱼时，值是null，要把他略过
             while (merge_index < merge_size-null_num && i+merge_index < list.size())
             {
                 UserData userData = list.get(i+merge_index);
@@ -194,13 +195,13 @@ public class BasicController {
                 try {
                     Double value;
                     YoloDto yoloDto = JSON.parseObject(yoloData, YoloDto.class);
-                    if (yoloDto.getYmax() == null && merge_size == 1)
+                    if ((yoloDto.getYmax() == null || getD(yoloDto.getYmax()) == null) && merge_size == 1)
                     {
                         value = null;
                         avg = null;
                         ++null_num;
                     }
-                    else if (yoloDto.getYmax() == null && merge_size > 1)
+                    else if ((yoloDto.getYmax() == null || getD(yoloDto.getYmax()) == null) && merge_size > 1)
                     {
                         ++null_num;
                         continue;
@@ -221,6 +222,7 @@ public class BasicController {
             Date createTime = new Date();
             createTime.setTime(avg_time + 8*60*60*1000);
             xData.add(dateFormat.format(createTime));
+            if (avg == 0.0 && null_num >= merge_size){avg = null}   //一个merge_size内，所有值都是null，最后结果也要是null
             yData.add(avg);
 
             i += merge_size;
