@@ -222,7 +222,7 @@ public class BasicController {
             Date createTime = new Date();
             createTime.setTime(avg_time + 8*60*60*1000);
             xData.add(dateFormat.format(createTime));
-            if (avg == 0.0 && null_num >= merge_size){avg = null}   //一个merge_size内，所有值都是null，最后结果也要是null
+            if (avg == 0.0 && null_num >= merge_size){avg = null;}   //一个merge_size内，所有值都是null，最后结果也要是null
             yData.add(avg);
 
             i += merge_size;
