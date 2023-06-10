@@ -201,14 +201,10 @@ public class BasicController {
                         avg = null;
                         ++null_num;
                     }
-                    else if ((yoloDto.getYmax() == null || getD(yoloDto.getYmax()) == null) && merge_size > 1)
-                    {
-                        ++null_num;
-                        continue;
-                    }
                     else
                     {
                         value = getD(yoloDto.getYmax());
+                        if (value == null){value = 0.0;}
                         avg = avg / (merge_index + 1) * merge_index + value / (merge_index + 1);
                     }
 
@@ -222,7 +218,7 @@ public class BasicController {
             Date createTime = new Date();
             createTime.setTime(avg_time + 8*60*60*1000);
             xData.add(dateFormat.format(createTime));
-            if (avg == 0.0 && null_num >= merge_size){avg = null;}   //一个merge_size内，所有值都是null，最后结果也要是null
+            //if (avg == 0.0 && null_num >= merge_size){avg = null;}   //一个merge_size内，所有值都是null，最后结果也要是null
             yData.add(avg);
 
             i += merge_size;
